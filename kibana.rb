@@ -583,16 +583,8 @@ post '/api/favorites' do
     name = params[:addFavoriteInput]
     hashcode = params[:hashcode]
     searchstring = params[:searchstring]
-    opt = params[:addFavoriteOpt]
     user = session[:username]
-    
-    # check if group or user
-    if user != opt and !@user_perms[:is_admin]
-	return JSON.generate( { :success => false , :message => "Do not have authority" } )
-    end
 
-    if user !=opt
-	
     # checks if favorite name already exists
     if !name.nil? and !searchstring.nil? and name != ""
       favorites = @@storage_module.get_favorites(user)
@@ -617,8 +609,8 @@ get '/api/favorites' do
     results = @@storage_module.get_favorites(user)
     if results != nil
         #p "json: #{results}"
-    	JSON.generate(results)
-	#results.as_json
+        JSON.generate(results)
+        #results.as_json
     end
   end
 end
@@ -650,6 +642,37 @@ delete '/api/favorites' do
       end
     else
       halt 500, "Invalid action"
+    end
+  end
+end
+
+#API to delete default favorite by name
+delete '/api/deffavorites' do
+  if @@auth_module
+    id = params["id"]
+    # check if the user owns the favorite
+    if !id.nil? and id != ""
+      r = @@storage_module.get_defFavorite(id)
+      if !r.nil? and @user_perms[:is_admin] == true
+        result = @@storage_module.del_favorite(id)
+        return JSON.generate( { :success => result, :message => "Delete failed"} )
+      else
+        return JSON.generate( { :success => false, :message => "Operation not permitted" } )
+      end
+    else
+      halt 500, "Invalid action"
+    end
+  end
+end
+
+#API to get json of default favorites
+get '/api/deffavorites' do
+  if @@auth_module
+    results = @@storage_module.get_defFavorites()
+    if results != nil
+        #p "json: #{results}"
+        JSON.generate(results)
+        #results.as_json
     end
   end
 end
