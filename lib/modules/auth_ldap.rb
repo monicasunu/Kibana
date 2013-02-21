@@ -23,10 +23,10 @@ class AuthLDAP
     @auth_admin_pass = (defined? config::Auth_Admin_Pass) ? config::Auth_Admin_Pass : ""
 =======
     @ldap_key = "L1m1t3d!"
-    @ldap.host = (defined? config::Ldap_host) ? config::Ldap_host : "dc05-sc.corp.shutterfly.com"
+    @ldap.host = (defined? config::Ldap_host) ? config::Ldap_host : ""
     @ldap.port = (defined? config::Ldap_port) ? config::Ldap_port : 636
-    @ldap_user_base = (defined? config::Ldap_user_base) ? config::Ldap_user_base : "CN=svc-giza,OU=Accounts-Service,OU=Controlled Objects,OU=shutterfly,DC=corp,DC=shutterfly,DC=com"
-    @ldap_group_base = (defined? config::Ldap_group_base) ? config::Ldap_group_base : "DC=corp,DC=shutterfly,DC=com"
+    @ldap_user_base = (defined? config::Ldap_user_base) ? config::Ldap_user_base : ""
+    @ldap_group_base = (defined? config::Ldap_group_base) ? config::Ldap_group_base : ""
     @ldap_suffix = (defined? config::Ldap_domain_fqdn) ? "@" + config::Ldap_domain_fqdn : ""
     @ldap.encryption(:simple_tls)
 >>>>>>> mongo storage, user_ldap, favorite saving,
