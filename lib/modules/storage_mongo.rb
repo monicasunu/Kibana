@@ -36,11 +36,11 @@ class StorageMongo
   # Required function, accepts a KibanaConfig object
   def initialize(config)
     @config = config
-    @mongo_host = (defined? config::Mongo_host) ? config::Mongo_host : 'dmdb01.dev.shutterfly.com'
+    @mongo_host = (defined? config::Mongo_host) ? config::Mongo_host : ''
     @mongo_port = (defined? config::Mongo_port) ? config::Mongo_port : 27017
-    @mongo_db = (defined? config::Mongo_db) ? config::Mongo_db : 'slogger'
-    @mongo_usr = (defined? config::Mongo_usr) ? config::Mongo_usr : 'logfly'
-    @mongo_pw = (defined? config::Mongo_pw) ? config::Mongo_pw : 'slog_dev'
+    @mongo_db = (defined? config::Mongo_db) ? config::Mongo_db : ''
+    @mongo_usr = (defined? config::Mongo_usr) ? config::Mongo_usr : ''
+    @mongo_pw = (defined? config::Mongo_pw) ? config::Mongo_pw : '
     puts "Initializing mongo (#{@mongo_host}:#{@mongo_port}/#{@mongo_db}) for kibana storage..."
     Mongoid.configure do |iconfig|
       iconfig.sessions = {default:{database: @mongo_db, hosts: [@mongo_host+':'+@mongo_port.to_s], username: @mongo_usr, password: @mongo_pw}}
