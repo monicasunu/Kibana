@@ -7,7 +7,7 @@ module KibanaConfig
   # Your elastic search server(s). This may be set as an array for round robin
   # load balancing
   # Elasticsearch = ["elasticsearch1:9200","elasticsearch2:9200"]
-  Elasticsearch = "slogger01.internal.shutterfly.com:9200"
+  Elasticsearch = "localhost:9200"
 
   #Set the Net::HTTP read/open timeouts for the connection to the ES backend
   ElasticsearchTimeout = 500
@@ -126,7 +126,7 @@ module KibanaConfig
   # Users and groups management Module
   Users_module = 'ldap'
 
-  Auth_Admin_User  = 'msun'
+  Auth_Admin_User  = 'admin'
   #Auth_Admin_Pass  = 'password'
   Auth_Admin_Perms  = { :is_admin => true, :enabled => true, :tags => ['*'] }
 
@@ -149,11 +149,11 @@ module KibanaConfig
   # Storage Module
   Storage_module = 'mongo'  # mongo
 
-  Mongo_host = 'dmdb01.dev.shutterfly.com'
+  Mongo_host = ''
   Mongo_port = 27017
-  Mongo_db = 'slogger'
-  Mongo_usr = 'logfly'
-  Mongo_pw = 'slog_dev'
+  Mongo_db = ''
+  Mongo_usr = ''
+  Mongo_pw = ''
 
   # Use this interval as fallback if the client's request in not valid.
   Fallback_interval = 900
