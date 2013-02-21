@@ -1,62 +1,105 @@
 require 'mongoid'
+require 'json'
+require 'bson'
+require 'moped'
 
 # MongoID class for storing permissions
-class Permissions
+class Permission
   include Mongoid::Document
-  field :username
+  #field :_id, pre_processed: true, default: ->{Moped::BSON::ObjectId}
+  field :username, :type => String
   field :enabled, :type => Boolean
   field :is_admin, :type => Boolean
   field :tags, :type => Array
+end
+
+# MongoID class for storing favorites
+class Favorite
+  include Mongoid::Document
+  field :_id, :type => String, pre_processed: true, default: ->{(0...10).map{65.+(rand(26)).chr}.join}
+  field :name, :type => String
+  field :user, :type => String 
+  field :searchstring, :type => String
+  field :hashcode, :type => String
+end
+
+# MongoID class for storing default favorites
+class DefFavorite
+  include Mongoid::Document
+  field :_id, :type => String, pre_processed: true, default: ->{(0...10).map{65.+(rand(26)).chr}.join}
+  field :name, :type => String
+  field :searchstring, :type => String
+  field :hashcode, :type => String
 end
 
 class StorageMongo
   # Required function, accepts a KibanaConfig object
   def initialize(config)
     @config = config
-    @mongo_host = (defined? config::Mongo_host) ? config::Mongo_host : "127.0.0.1"
+    @mongo_host = (defined? config::Mongo_host) ? config::Mongo_host : 'dmdb01.dev.shutterfly.com'
     @mongo_port = (defined? config::Mongo_port) ? config::Mongo_port : 27017
-    @mongo_db = (defined? config::Mongo_db) ? config::Mongo_db : "kibana"
+    @mongo_db = (defined? config::Mongo_db) ? config::Mongo_db : 'slogger'
+    @mongo_usr = (defined? config::Mongo_usr) ? config::Mongo_usr : 'logfly'
+    @mongo_pw = (defined? config::Mongo_pw) ? config::Mongo_pw : 'slog_dev'
     puts "Initializing mongo (#{@mongo_host}:#{@mongo_port}/#{@mongo_db}) for kibana storage..."
-    Mongoid.configure.master = Mongo::Connection.new(@mongo_host,@mongo_port).db(@mongo_db)
+    Mongoid.configure do |iconfig|
+      iconfig.sessions = {default:{database: @mongo_db, hosts: [@mongo_host+':'+@mongo_port.to_s], username: @mongo_usr, password: @mongo_pw}}
+      #iconfig.options = {include_type_for_serialization: false, protect_sensitive_fields: false}
+    end
   end
 
   # Helper function
   def lookup_permissions(username)
-    p = Permissions.where(:username => username)[0]
+    p = Permission.where(:username => username)[0].as_json
     return p
   end
 
-  # Required function, gets the user's permissions
   def get_permissions(username)
-    p = lookup_permissions(username)
-    if p
-      return p
-    else
-      return nil
-    end
+    return Permission.where(:username => username)[0]
   end
 
   def get_all_permissions()
-    return Permissions.all(:sort => [[:username,:asc]]).to_a
+    return Permission.all().to_a
   end
 
-  # Required function, sets the user's permissions
-  def set_permissions(username,tags,is_admin = false)
+  def get_all_users()
     begin
-      p = lookup_permissions(username)
+	p = get_all_permissions()
+	result = Array.new
+	p.each do |item|
+	  result.push(item[:username])
+	end
+	return result.sort
+    rescue => details
+	p "#{details.backtrace.join("\n")}"
+	return []
+    end
+  end
+		
+  # Required function, sets the user's permissions
+  def set_permissions(username,tags = [],is_admin = false)
+    begin
+      p = get_permissions(username)
       if !p
         # upsert
-        p = Permissions.create!
-        p.username = username
+        p = Permission.create!
+        p[:username] = username
+      end
+      #tags includes the name of groups it belongs to, which start with '@'
+      unless (tags.include? "@default")||(username.start_with?("@"))
+	tags.push("@default")
       end
       p[:tags] = tags
       p[:is_admin] = is_admin
+      p[:enabled] = true
+      #p "new record: #{p}"
       p.save!
       if !p.persisted?
         raise "Failed to save user data for #{username}"
       end
-      return true
-    rescue
+      return p
+    rescue => details
+      p "#{details.backtrace.join("\n")}"
       # TODO: log message?
       return false
     end
@@ -65,7 +108,7 @@ class StorageMongo
   # Required function, enables a user
   def enable_user(username)
     begin
-      p = get_permissions(username)
+      p = lookup_permissions(username)
       if !p
         raise "Username not found"
       end
@@ -75,7 +118,8 @@ class StorageMongo
         raise "Failed to save user data for #{username}"
       end
       return true
-    rescue
+    rescue => details
+      p "#{details.backtrace.join("\n")}"
       return false
     end
   end
@@ -83,7 +127,7 @@ class StorageMongo
   # Required function, disables a user
   def disable_user(username)
     begin
-      p = get_permissions(username)
+      p = lookup_permissions(username)
       if !p
         raise "Username not found"
       end
@@ -93,8 +137,165 @@ class StorageMongo
         raise "Failed to save user data for #{username}"
       end
       return true
-    rescue
+    rescue => details
+      p "#{details.backtrace.join("\n")}"
       return false
+    end
+  end
+
+  #delete permission
+  def del_permissions(username)
+    begin
+      p = get_permissions(username)
+      if p
+        p.delete
+        return true
+      end
+    rescue => details
+      p "#{details.backtrace.join("\n")}"
+      return false
+    end
+  end
+
+
+  # Sets a favorite
+  def set_favorite(name,user,searchstring,hashcode)
+    begin
+      p = Favorite.where(:name => name)[0]
+      if !p
+        p = Favorite.create!
+        #id = (0...10).map{65.+(rand(26)).chr}.join
+        #p._id = id
+        p[:name] = name
+        p[:user] = user
+        p[:searchstring] = searchstring
+	p[:hashcode] = hashcode
+        p.save!
+      else
+        p "Duplicate name"
+        return false
+      end
+      if !p.persisted?
+        raise "Failed to save favorite data for #{name}"
+        return false
+      end
+      return true
+    rescue => details
+      p "#{details.backtrace.join("\n")}"
+      # TODO: log message?
+      return false
+    end
+  end
+
+  # Deletes a favorite
+  def del_favorite(id)
+    begin
+      p = Favorite.where(:_id => id)
+      if p
+        p.delete
+        return true
+      end
+    rescue => details
+      p "#{details.backtrace.join("\n")}"
+      return false
+    end
+  end
+
+  # Get the user's favorites
+  def get_favorites(user)
+    begin
+      response = Favorite.where(:user => user)
+      if response
+        result = Array.new
+        response.each_with_index do |item, index|
+                result.push(response[index].as_json)
+        end
+        return result
+      end
+    rescue => details
+      p "#{details.backtrace.join("\n")}"
+      return nil
+    end
+  end
+
+  # Get a favorite
+  def get_favorite(id)
+    begin
+      p = Favorite.where(:_id => id).as_json[0]
+      if p
+        return p
+      end
+    rescue => details
+      p "#{details.backtrace.join("\n")}"
+      return nil
+    end
+  end
+
+  # Sets a default favorite
+  def set_defFavorite(name,searchstring,hashcode)
+    begin
+      p = DefFavorite.where(:name => name)[0]
+      if !p
+        p = DefFavorite.create!
+        #id = (0...10).map{65.+(rand(26)).chr}.join
+        #p._id = id
+        p[:name] = name
+        p[:searchstring] = searchstring
+	p[:hashcode] = hashcode
+        p.save!
+      else
+        p "Duplicate name"
+        return false
+      end
+      if !p.persisted?
+        raise "Failed to save favorite data for #{name}"
+        return false
+      end
+      return true
+    rescue => details
+      p "#{details.backtrace.join("\n")}"
+      # TODO: log message?
+      return false
+    end
+  end
+
+  # Deletes a default favorite
+  def del_defFavorite(id)
+    begin
+      p = DefFavorite.where(:_id => id)
+      if p
+        p.delete
+        return true
+      end
+    rescue => details
+      p "#{details.backtrace.join("\n")}"
+      return false
+    end
+  end
+
+  # Get a default favorite by id
+  def get_defFavorite(id)
+    begin
+      p = DefFavorite.where(:_id => id).as_json[0]
+      if p
+        return p
+      end
+    rescue => details
+      p "#{details.backtrace.join("\n")}"
+      return nil
+    end
+  end
+
+  def get_defFavorites()
+    begin
+        result = Array.new
+        DefFavorite.each do |defFav|
+                result.push(defFav.as_json)
+        end
+        return result
+    rescue => details
+      p "#{details.backtrace.join("\n")}"
+      return nil
     end
   end
 end

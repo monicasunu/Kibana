@@ -7,7 +7,7 @@ module KibanaConfig
   # Your elastic search server(s). This may be set as an array for round robin
   # load balancing
   # Elasticsearch = ["elasticsearch1:9200","elasticsearch2:9200"]
-  Elasticsearch = "localhost:9200"
+  Elasticsearch = "slogger01.internal.shutterfly.com:9200"
 
   #Set the Net::HTTP read/open timeouts for the connection to the ES backend
   ElasticsearchTimeout = 500
@@ -118,21 +118,21 @@ module KibanaConfig
   Disable_fullscan = false
 
   # Set headers to allow kibana to be loaded in an iframe from a different origin.
-  Allow_iframed = false
+  Allow_iframed = true
 
   # Authentication Module
-  Auth_module = 'elasticsearch'
+  Auth_module = 'ldap'
 
   # Users and groups management Module
-  Users_module = 'elasticsearch'
+  Users_module = 'ldap'
 
-  Auth_Admin_User  = 'kibana'
-  Auth_Admin_Pass  = 'password'
-  Auth_Admin_Perms  = { 'is_admin' => true, 'enabled' => true, 'tags' => ['*'] }
+  Auth_Admin_User  = 'msun'
+  #Auth_Admin_Pass  = 'password'
+  Auth_Admin_Perms  = { :is_admin => true, :enabled => true, :tags => ['*'] }
 
   # Authentication options for the auth_ldap module
-  Ldap_host = '127.0.0.1'
-  Ldap_port = 389
+  #Ldap_host = 'dc05-sc.corp.shutterfly.com'
+  #Ldap_port = 636  
   # Adds a '@domain.local' suffix to the username when authenticating against an LDAP directory
   # Ldap_domain_fqdn = 'domain.local'
   # DNs that contain users and groups
@@ -147,11 +147,13 @@ module KibanaConfig
   #   uid=username,ou=Users,dc=example,dc=com
 
   # Storage Module
-  Storage_module = 'elasticsearch'  # mongo
+  Storage_module = 'mongo'  # mongo
 
-  #Mongo_host = '127.0.0.1'
-  #Mongo_port = 27017
-  #Mongo_db = 'kibana'
+  Mongo_host = 'dmdb01.dev.shutterfly.com'
+  Mongo_port = 27017
+  Mongo_db = 'slogger'
+  Mongo_usr = 'logfly'
+  Mongo_pw = 'slog_dev'
 
   # Use this interval as fallback if the client's request in not valid.
   Fallback_interval = 900

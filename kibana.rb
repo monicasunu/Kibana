@@ -32,7 +32,8 @@ configure do
       require "./lib/modules/users_#{KibanaConfig::Users_module}"
       @@users_module = get_users_module(KibanaConfig)
     end
-  rescue
+  rescue => details
+    p "#{details.backtrace.join("\n")}"
     puts "Failed to load the users module: #{KibanaConfig::Users_module}"
   end
 
@@ -42,7 +43,8 @@ configure do
       require "./lib/modules/auth_#{KibanaConfig::Auth_module}"
       @@auth_module = get_auth_module(KibanaConfig)
     end
-  rescue
+  rescue => details
+    p "#{details.backtrace.join("\n")}"
     puts "Failed to load the auth module: #{KibanaConfig::Auth_module}"
   end
 
@@ -50,7 +52,8 @@ configure do
   begin
     require "./lib/modules/storage_#{KibanaConfig::Storage_module}"
     @@storage_module = get_storage_module(KibanaConfig)
-  rescue
+  rescue => details
+    p "#{details.backtrace.join("\n")}"
     puts "Failed to load the storage module: #{KibanaConfig::Storage_module}"
   end
 end
@@ -87,7 +90,7 @@ before do
         halt redirect '/auth/login'
       end
     else
-      @user_perms = @@storage_module.get_permissions(session[:username])
+      @user_perms = (@@storage_module.get_permissions(session[:username])) ? @@storage_module.get_permissions(session[:username]) : @@storage_module.set_permissions(session[:username],['*'],false)
       if !@user_perms
         # User is authenticated, but not authorized. Put them in
         # a holding state until an admin grants them authorization
@@ -192,7 +195,7 @@ get '/auth/admin' do
     locals[:users] = []
     locals[:groups] = []
     @@storage_module.get_all_permissions().each do |perm|
-      if perm.username.start_with?("@")
+      if perm[:username].start_with?("@")
         locals[:groups].push(perm)
       else
         locals[:users].push(perm)
@@ -224,20 +227,20 @@ get %r{/auth/admin/([\w]+)(/[@% \w]+)?} do
         locals[:is_group]=true
         locals[:group_members] = @@users_module.group_members(locals[:user_data][:username])
         locals[:allusers] = @@users_module.users()
-	locals[:type] = "Group"
+	locals[:type] = 'Group'
       else
         locals[:can_change_pass] = @@users_module.respond_to?('set_password')
         locals[:user_groups] = @@users_module.membership(locals[:user_data][:username])
-	locals[:type] = "User"
+	locals[:type] = 'User'
       end
     elsif mode == "newuser"
-      locals[:mode] = "new"
-      locals[:type] = "User"
+      locals[:mode] = 'new'
+      locals[:type] = 'User'
       locals[:allgroups] = @@users_module.groups()
       locals[:can_change_pass] = @@users_module.respond_to?('set_password')
     elsif mode == "newgroup"
-      locals[:mode] = "new"
-      locals[:type] = "Group"
+      locals[:mode] = 'new'
+      locals[:type] = 'Group'
       locals[:is_group] = true
       locals[:allusers] = @@users_module.users()
     else
@@ -264,50 +267,59 @@ post '/auth/admin/save' do
   usertags = params[:usertags]
   if params[:delete] != nil
     puts "Deleting #{username}"
-    @@storage_module.del_permissions(username)
+    #@@storage_module.del_permissions(username)
     if username.start_with?("@")
       @@users_module.del_group(username)
     else
       @@users_module.del_user(username)
     end
   else
-    if @@users_module.lookup_user(username).nil?
+    if @@storage_module.lookup_permissions(username).nil?
       puts "Creating #{username}"
       # sets password to "" if password undefined
-      params[:pass1] = "" if params[:pass1].nil?
+      #params[:pass1] = "" if params[:pass1].nil?
     else
       puts "Updating #{username}"
     end
-    is_admin = (defined?(params[:is_admin]) && params[:is_admin] == "on") ? true : false
-    @@storage_module.set_permissions(username,usertags,is_admin)
+    is_admin = (defined?(params[:is_admin]) && params[:is_admin] == "true") ? true : false
+    usertags = members = params[:members]    
+    #@@users_module.add_group(username, members, is_admin)
     # Update the auth group info
     if username.start_with?("@") and @@users_module.respond_to?('add_group')
-      members = params[:members]
-      @@users_module.add_group(username, members)
-    elsif params[:pass1] != nil
-      password = params[:pass1]
-      @@users_module.set_password(username, password)
-      user_groups = params[:user_groups]
-      old_groups = @@users_module.membership(username)
-      if user_groups.nil?
-        del_groups = old_groups
-      elsif old_groups.nil?
-        add_groups=user_groups
-      else
-        add_groups = user_groups-old_groups
-        del_groups = old_groups-user_groups
-      end
-      if not add_groups.nil?
-        add_groups.each do |group|
-          @@users_module.add_user_2group(username, group)
-        end
-      end
-      if not del_groups.nil?
-        del_groups.each do |group|
-          @@users_module.rm_user_from_group(username, group)
-        end
+      #members = params[:members]
+      @@users_module.add_group(username, members, is_admin)
+    elsif !username.start_with?("@")
+      @@storage_module.set_permissions(username, [], is_admin)
+      if usertags != nil && usertags != []
+	usertags.each do |gp|
+	  @@users_module.add_user_2group(username,gp)
+	end
       end
     end
+    #elsif params[:pass1] != nil
+      #password = params[:pass1]
+      #@@users_module.set_password(username, password)
+      #user_groups = params[:user_groups]
+      #old_groups = @@users_module.membership(username)
+      #if user_groups.nil?
+        #del_groups = old_groups
+      #elsif old_groups.nil?
+        #add_groups=user_groups
+      #else
+        #add_groups = user_groups-old_groups
+        #del_groups = old_groups-user_groups
+      #end
+      #if not add_groups.nil?
+        #add_groups.each do |group|
+          #@@users_module.add_user_2group(username, group)
+        #end
+      #end
+      #if not del_groups.nil?
+        #del_groups.each do |group|
+          #@@users_module.rm_user_from_group(username, group)
+        #end
+      #end
+    #end
   end
   # FIXME: Find a better way to make sure the changes will show on page load
   sleep(1)
@@ -565,22 +577,32 @@ get '/export/:hash/?:count?' do
 
 end
 
+#API to add favorites by given json
 post '/api/favorites' do
   if @@auth_module
     name = params[:addFavoriteInput]
     hashcode = params[:hashcode]
+    searchstring = params[:searchstring]
+    opt = params[:addFavoriteOpt]
     user = session[:username]
+    
+    # check if group or user
+    if user != opt and !@user_perms[:is_admin]
+	return JSON.generate( { :success => false , :message => "Do not have authority" } )
+    end
 
+    if user !=opt
+	
     # checks if favorite name already exists
-    if !name.nil? and !hashcode.nil? and name != "" and hashcode != ""
+    if !name.nil? and !searchstring.nil? and name != ""
       favorites = @@storage_module.get_favorites(user)
       favorites.each do |fav|
-        if fav["name"] == name
+        if fav[:name] == name
           return JSON.generate( { :success => false , :message => "Name already exists" } )
         end
       end
       # adds a new favorite
-      result = @@storage_module.set_favorite(name,user,hashcode)
+      result = @@storage_module.set_favorite(name,user,searchstring,hashcode)
       return JSON.generate( { :success => result , :message => "" } )
     else
       halt 500, "Invalid action"
@@ -588,22 +610,39 @@ post '/api/favorites' do
   end
 end
 
+#API to get json of favorites of specific user
 get '/api/favorites' do
   if @@auth_module
     user = session[:username]
     results = @@storage_module.get_favorites(user)
-    JSON.generate(results)
+    if results != nil
+        #p "json: #{results}"
+    	JSON.generate(results)
+	#results.as_json
+    end
   end
 end
 
+#API to get json of memberships of specific user
+get '/api/memberships' do
+  if @@auth_module
+    user = session[:username]
+    results = @@users_module.membership(user)
+    if results != nil
+        JSON.generate({:groups => results})
+    end
+  end
+end
+
+#API to delete favorite by _id
 delete '/api/favorites' do
   if @@auth_module
-    id = params[:id]
-    user = session[:username]
+    id = params["id"]
+    user = session["username"]
     # check if the user owns the favorite
     if !id.nil? and id != ""
       r = @@storage_module.get_favorite(id)
-      if !r.nil? and r[:user] == user
+      if !r.nil? and r["user"] == user
         result = @@storage_module.del_favorite(id)
         return JSON.generate( { :success => result, :message => ""} )
       else

@@ -1521,29 +1521,43 @@ function unhighlight_all_events() {
 
 // Populate the select elements
 function populate_selectboxes() {
-  populate_selectbox("select#openFavoriteSelect", "name", "hashcode");
-  populate_selectbox("select#deleteFavoriteSelect", "name", "id");
+  populate_selectbox("#userFav", "name", "hashcode", "_id");
+  populate_selectbox("#sysFav", "name", "hashcode", "_id");
 }
 
-function populate_selectbox(selectbox, value, index) {
-  var $form = $(selectbox).parents('form');
-  var selectMessage = $(selectbox).get(0).options[0].text;
+function populate_selectbox(selectbox, value, index, idvalue) {
   $.ajax({
-    url: $form.attr('action'),
-    type: $form.attr('method'),
+    url: $(selectbox).attr('name'),
+    type: "get",
     cache: false,
     dataType: 'json',
     success: function( json ) {
       json.sort(function(a, b) {
         return a[value] == b[value] ? 0 : a[value] < b[value] ? -1 : 1
       });
+<<<<<<< HEAD
       $(selectbox).get(0).options.length = 0;
       $(selectbox).get(0).options[0] = new Option(selectMessage, "-1");
+=======
+>>>>>>> mongo storage, user_ldap, favorite saving,
       $.each(json, function(idx, itm) {
-        $(selectbox).get(0).options[$(selectbox).get(0).options.length] = new Option(xmlEnt(itm[value]), itm[index]);
+        appToList(selectbox, '#'+itm[index], xmlEnt(itm[value]), itm[idvalue]);
       });
     }
   });
+}
+
+function appToList(selectbox,value,text, idvalue) {
+  var url=$(selectbox).attr('name');
+  var linkdel=$('<a/>').attr({class:"deleteFavoriteButton", value: idvalue, action:url}).text('x');
+  var link=$('<a/>').attr('href', value).text(text);
+  var cell1=$('<td/>').attr({width:'99%', align:'left'}).append(link);
+  var cell2=$('<td/>').attr('width','1%').append(linkdel);
+  var row=$('<th/>').append(cell1).append(cell2);
+  var table=$('<table/>').attr('width','100%');
+  table.append(row);
+  //$(selectbox).append('<li/>').append(table);
+  $('<li/>').insertAfter(selectbox).append(table);
 }
 
 function bind_clicks() {
@@ -1682,17 +1696,6 @@ function bind_clicks() {
     unhighlight_all_events();
   });
 
-
-  // Favorites drop-down menu
-  $('.favoritesMenu > li').bind('mouseover', openSubMenu);
-  $('.favoritesMenu > li').bind('mouseout', closeSubMenu);
-  function openSubMenu() {
-    $(this).find('ul').css('visibility', 'visible');	
-  };
-  function closeSubMenu() {
-    $(this).find('ul').css('visibility', 'hidden');	
-  };
-
   // Favorites management modal boxes
   $(".modalbox").fancybox();
 
@@ -1706,14 +1709,21 @@ function bind_clicks() {
   
     // validate and process form
     var name = $("input#addFavoriteInput").val();
+<<<<<<< HEAD
     if ((name.length <= 1) || (name.length >= 50)) {
+=======
+    if ((name.length <= 1) || (name.length >= 50)) {    
+>>>>>>> mongo storage, user_ldap, favorite saving,
       $("#addFavoriteInput").addClass("error");
       return false;  
-    }  
-    var sendhash = window.location.hash.replace(/^#/, '');
-    var $form = $(this).parents('form');
-    var data = $form.serialize() + '&hashcode=' + sendhash;
+    } 
     
+    //var optn = $("select#addFavoriteOption option:selected").text();; 
+    var $form = $(this).parents('form');
+    var sdata = $("#queryinput").val();
+    var hdata = window.location.hash.replace(/^#/, '');
+    var data = $form.serialize() + '&searchstring=' + sdata +'&hashcode=' + hdata; 
+	
     window.request = $.ajax({
       url: $form.attr('action'),
       type: $form.attr('method'),
@@ -1738,40 +1748,111 @@ function bind_clicks() {
   });
 
   // Open a favorite search
-  $("#openFavoriteButton").on("click", function(){
-    window.location.hash = $("#openFavoriteSelect").val();
-    window.inprogress = false;
-    pageload(window.location.hash);
-    $.fancybox.close();
-  });
-
-  // Delete a favorite search
-  $("#deleteFavoriteButton").on("click", function(e){
+  //$("#openFavoriteButton").on("click", function(){
+    //window.location.hash = $("#openFavoriteSelect").val();
+    //window.inprogress = false;
+    //pageload(window.location.hash);
+    //$.fancybox.close();
+  //});
+  $("a.deleteFavoriteButton").live("click", function(){
     window.inprogress = true;
-    e.preventDefault();
+    //e.preventDefault();
 
-    var id = $("#deleteFavoriteSelect").val();
-    var data = { "id" : id };
-    var $form = $(this).parents('form');
+    var id = $(this).val();
+    var $url = $(this).attr('action');
+    var data = {"id" : id}
 
     window.request = $.ajax({
-      url: '/api/favorites',
+      url: $url,
       type: 'delete',
-      cache: false,
       data: data,
+      cache: false,
       success: function (json) {
         result = JSON.parse(json);
         if (result.success) {
-          $form.each(function(){
-            this.reset();
-          });
+          $('input#queryinput').reset();
           setTimeout(function() { populate_selectboxes()}, 1000);
           window.inprogress = false;
-          $.fancybox.close();
+        }
+        else {
+            $("#errorMessage").html(result.message);
+            $("#errorMessageDialog").dialog();
         }
       }
     });
+    window.location.reload();
     return false;
   });
+}
+
+$.widget( "custom.catcomplete", $.ui.autocomplete, {
+  _renderMenu: function( ul, items ) {
+    var that = this,
+      currentCategory = "";
+    $.each( items, function( index, item ) {
+      if ( item.category != currentCategory ) {
+        ul.append( "<li class='ui-autocomplete-category'>" + item.category + "</li>" );
+        currentCategory = item.category;
+      }
+      that._renderItemData( ul, item );
+    });
+  }
+});
+
+$(function() {
+  var data=[];
+  $.ajax({
+    url: "/api/favorites",
+    type: "get",
+    cache: false,
+    dataType: 'json',
+    success: function( json ) {
+      $.each(json, function(idx, itm) {
+      	var tmp={label:xmlEnt(itm["name"]), value:itm["searchstring"], category:"My Search"};
+	data.push(tmp);
+      });
+    }
+  });
+
+  $.ajax({
+    url: "/api/deffavorites",
+    type: "get",
+    cache: false,
+    dataType: 'json',
+    success: function( json ) {
+      $.each(json, function(idx, itm) {
+        var tmp={label:xmlEnt(itm["name"]), value:itm["searchstring"], category:"Default Search"};
+        data.push(tmp);
+      });
+    }
+  });
  
+  $( "#queryinput" ).catcomplete({
+    delay: 0,
+    source: data
+  });
+});
+
+window.displayBoxIndex = -1;
+
+$(document).keyup(function(e) {
+        if (e.keyCode == 40) 
+        {  
+            Navigate(1);
+        }
+        if(e.keyCode==38)
+        {
+            Navigate(-1);
+        }
+})
+
+var Navigate = function(diff) {
+    displayBoxIndex += diff;
+    var oBoxCollection = $(".ui-autocomplete li:not(.ui-autocomplete-category)");
+    if (displayBoxIndex >= oBoxCollection.length)
+         displayBoxIndex = 0;
+    if (displayBoxIndex < 0)
+         displayBoxIndex = oBoxCollection.length - 1;
+    var cssClass = "hlight";
+    oBoxCollection.removeClass(cssClass).eq(displayBoxIndex).addClass(cssClass);
 }

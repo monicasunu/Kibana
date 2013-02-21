@@ -64,6 +64,8 @@ table.pagelinks {
   text-align: center;
 }
 
+
+
 div.pagelinks {
   border-bottom: 1px dashed #CCCCCC;
 }
@@ -167,9 +169,24 @@ table.formatting td {
 }
 
 #queryinput {
-  width: 98%;
+  position: absolute;
+  top: -15px;
+  left: 0px;
+  width: 96.5%;
   font-size: 8pt;
   color: #333;
+}
+
+#container {
+  position: relative;
+  width: 100%;
+}
+
+#dropdown {
+  position: absolute;
+  width: 100%;
+  top: -21px;
+  left: 0px;
 }
 
 #feedlinks {
@@ -237,7 +254,6 @@ table.micro td {
   overflow: hidden;
   line-height: 12px;
 }
-
 
 #graph_container {
   height: 100px;
@@ -569,6 +585,39 @@ modaltxtarea.error:focus {
    width:130px;
 }
 
+<<<<<<< HEAD
 .favoriteSelect {
    width : 400px;
+=======
+.ui-autocomplete-category {
+  font-weight: bold;
+  padding: .2em .4em;
+  margin: .8em 0 .2em;
+  line-height: 1.5;
+}
+ 
+#favList {
+  width: 97.5% !important;
+}
+
+#deleteFavoriteButton {
+  color:Gainsboro;
+  font-style:italic;
+}
+.custom {
+  width: 95% !important;
+}
+
+#favList table:hover, ul.ui-autocomplete li:not(.ui-autocomplete-category):hover, .hlight {
+  background: #eeeeee !important;
+}
+
+#favList a:hover, #favList a.deleteFavoriteButton:hover {
+  text-decoration: none;
+  color: black;
+}
+
+#favList a.deleteFavoriteButton {
+  color: #D3D3D3;
+>>>>>>> mongo storage, user_ldap, favorite saving,
 }
