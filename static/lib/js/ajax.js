@@ -1535,11 +1535,6 @@ function populate_selectbox(selectbox, value, index, idvalue) {
       json.sort(function(a, b) {
         return a[value] == b[value] ? 0 : a[value] < b[value] ? -1 : 1
       });
-<<<<<<< HEAD
-      $(selectbox).get(0).options.length = 0;
-      $(selectbox).get(0).options[0] = new Option(selectMessage, "-1");
-=======
->>>>>>> mongo storage, user_ldap, favorite saving,
       $.each(json, function(idx, itm) {
         appToList(selectbox, '#'+itm[index], xmlEnt(itm[value]), itm[idvalue]);
       });
