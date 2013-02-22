@@ -1704,11 +1704,8 @@ function bind_clicks() {
   
     // validate and process form
     var name = $("input#addFavoriteInput").val();
-<<<<<<< HEAD
-    if ((name.length <= 1) || (name.length >= 50)) {
-=======
+
     if ((name.length <= 1) || (name.length >= 50)) {    
->>>>>>> mongo storage, user_ldap, favorite saving,
       $("#addFavoriteInput").addClass("error");
       return false;  
     } 
