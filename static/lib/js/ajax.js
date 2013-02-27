@@ -1522,7 +1522,33 @@ function unhighlight_all_events() {
 // Populate the select elements
 function populate_selectboxes() {
   populate_selectbox("#userFav", "name", "hashcode", "_id");
-  populate_selectbox("#sysFav", "name", "hashcode", "_id");
+  populate_g_selectbox("#favList","name", "hashcode", "_id");
+}
+
+function populate_g_selectbox(selectbox, value, index, idvalue) {
+  $.ajax({
+    url: "/api/favorites/groups",
+    type: "get",
+    cache: false,
+    dataType: 'json',
+    success: function( json ) {
+      $.each(json, function(idx, itm) {
+	var newselectbox = itm["groupname"];
+	var searchname = newselectbox.substring(1).toLowerCase().replace(/\b[a-z]/g, function(letter) {
+    				return letter.toUpperCase();
+			});
+	var divider = $('<li/>').attr('class','divider');
+	var item = $('<li/>').attr({id:newselectbox.substring(1), name:"/api/favorites"}).text(searchname+" Search");
+	$(selectbox).append(divider);
+	$(selectbox).append(item);
+	var option = $('<option/>').attr('value',newselectbox).text(searchname+" Search");
+	$('select#addFavoriteOpt').append(option);
+        $.each(itm["favorites"],function(ind, ite){
+          appToList('#'+newselectbox.substring(1), '#'+ite[index], xmlEnt(ite[value]), ite[idvalue]);
+        });
+      });
+    }
+  });
 }
 
 function populate_selectbox(selectbox, value, index, idvalue) {
@@ -1704,7 +1730,11 @@ function bind_clicks() {
   
     // validate and process form
     var name = $("input#addFavoriteInput").val();
+<<<<<<< HEAD
 
+=======
+    var opt = $("select#addFavoriteOpt").val();
+>>>>>>> merge default to group setting
     if ((name.length <= 1) || (name.length >= 50)) {    
       $("#addFavoriteInput").addClass("error");
       return false;  
@@ -1714,7 +1744,7 @@ function bind_clicks() {
     var $form = $(this).parents('form');
     var sdata = $("#queryinput").val();
     var hdata = window.location.hash.replace(/^#/, '');
-    var data = $form.serialize() + '&searchstring=' + sdata +'&hashcode=' + hdata; 
+    var data = $form.serialize() + '&searchstring=' + sdata +'&hashcode=' + hdata + '&opt=' + opt; 
 	
     window.request = $.ajax({
       url: $form.attr('action'),
@@ -1736,6 +1766,7 @@ function bind_clicks() {
         }
       }
     });
+    window.location.reload();
     return false;
   });
 
@@ -1805,20 +1836,25 @@ $(function() {
       });
     }
   });
-
+  
   $.ajax({
-    url: "/api/deffavorites",
+    url: '/api/favorites/groups',
     type: "get",
     cache: false,
     dataType: 'json',
     success: function( json ) {
-      $.each(json, function(idx, itm) {
-        var tmp={label:xmlEnt(itm["name"]), value:itm["searchstring"], category:"Default Search"};
-        data.push(tmp);
-      });
+        $.each(json, function(idx, itm) {
+          var group=itm['groupname'].substring(1).toLowerCase().replace(/\b[a-z]/g, function(letter) {
+                                return letter.toUpperCase();
+                        });
+	  $.each(itm['favorites'], function(ind, ite) {
+	    var tmp={label:xmlEnt(ite["name"]), value:ite["searchstring"], category:group+" Search"};
+            data.push(tmp);
+	  });
+        });    
     }
   });
- 
+
   $( "#queryinput" ).catcomplete({
     delay: 0,
     source: data

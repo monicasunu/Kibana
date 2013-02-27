@@ -110,7 +110,7 @@ before do
         # check any groups this user belongs to for additional
         # permissions defined in the storage module
         @@users_module.membership(session[:username]).each do |group|
-          g_perms = @@storage_module.get_permissions(group)
+          g_perms = @@storage_module.get_permissions("@"+group)
           if g_perms
             if defined?(g_perms[:tags]) and g_perms[:tags]
               @user_perms[:tags] = (@user_perms[:tags] + g_perms[:tags]).uniq
@@ -584,6 +584,7 @@ post '/api/favorites' do
     hashcode = params[:hashcode]
     searchstring = params[:searchstring]
     user = session[:username]
+<<<<<<< HEAD
 
     # checks if favorite name already exists
     if !name.nil? and !searchstring.nil? and name != ""
@@ -591,13 +592,32 @@ post '/api/favorites' do
       favorites.each do |fav|
         if fav[:name] == name
           return JSON.generate( { :success => false , :message => "Name already exists" } )
-        end
+=======
+    
+    # check if group or user
+    if opt!= "1" and !@user_perms[:is_admin]
+      return JSON.generate( { :success => false , :message => "Do not have authority" } )
+    end
+
+    if (opt!= "1" and @user_perms[:is_admin]) or opt == "1"
+      if opt == "1"
+	opt = user
       end
-      # adds a new favorite
-      result = @@storage_module.set_favorite(name,user,searchstring,hashcode)
-      return JSON.generate( { :success => result , :message => "" } )
-    else
-      halt 500, "Invalid action"
+      # checks if favorite name already exists
+      if !name.nil? and !searchstring.nil? and name != ""
+        favorites = @@storage_module.get_favorites(opt)
+        favorites.each do |fav|
+          if fav[:name] == name
+            return JSON.generate( { :success => false , :message => "Name already exists" } )
+          end
+>>>>>>> merge default to group setting
+        end
+        # adds a new favorite
+        result = @@storage_module.set_favorite(name,opt,searchstring,hashcode)
+        return JSON.generate( { :success => result , :message => "" } )
+      else
+        halt 500, "Invalid action"
+      end
     end
   end
 end
@@ -615,14 +635,24 @@ get '/api/favorites' do
   end
 end
 
-#API to get json of memberships of specific user
-get '/api/memberships' do
+#API to get json of favorites of specific group
+get '/api/favorites/groups' do
   if @@auth_module
-    user = session[:username]
-    results = @@users_module.membership(user)
-    if results != nil
-        JSON.generate({:groups => results})
+    groups = @@users_module.membership(session[:username])
+    results = []
+    for group in groups
+      group = "@"+group 
+      result = @@storage_module.get_favorites(group)
+      if result != nil
+	temp = {}
+	temp[:groupname] = group
+	temp[:favorites] = result
+	results.push(temp)
+      end
     end
+    #p "json: #{results}
+    JSON.generate(results)
+    #results.as_json
   end
 end
 
@@ -634,7 +664,7 @@ delete '/api/favorites' do
     # check if the user owns the favorite
     if !id.nil? and id != ""
       r = @@storage_module.get_favorite(id)
-      if !r.nil? and r["user"] == user
+      if !r.nil? and (r["user"] == user or (r["user"] != user and @user_perms[:is_admin]))
         result = @@storage_module.del_favorite(id)
         return JSON.generate( { :success => result, :message => ""} )
       else
