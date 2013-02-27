@@ -1730,11 +1730,7 @@ function bind_clicks() {
   
     // validate and process form
     var name = $("input#addFavoriteInput").val();
-<<<<<<< HEAD
-
-=======
     var opt = $("select#addFavoriteOpt").val();
->>>>>>> merge default to group setting
     if ((name.length <= 1) || (name.length >= 50)) {    
       $("#addFavoriteInput").addClass("error");
       return false;  
