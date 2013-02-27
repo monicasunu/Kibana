@@ -584,15 +584,6 @@ post '/api/favorites' do
     hashcode = params[:hashcode]
     searchstring = params[:searchstring]
     user = session[:username]
-<<<<<<< HEAD
-
-    # checks if favorite name already exists
-    if !name.nil? and !searchstring.nil? and name != ""
-      favorites = @@storage_module.get_favorites(user)
-      favorites.each do |fav|
-        if fav[:name] == name
-          return JSON.generate( { :success => false , :message => "Name already exists" } )
-=======
     
     # check if group or user
     if opt!= "1" and !@user_perms[:is_admin]
@@ -610,7 +601,6 @@ post '/api/favorites' do
           if fav[:name] == name
             return JSON.generate( { :success => false , :message => "Name already exists" } )
           end
->>>>>>> merge default to group setting
         end
         # adds a new favorite
         result = @@storage_module.set_favorite(name,opt,searchstring,hashcode)
