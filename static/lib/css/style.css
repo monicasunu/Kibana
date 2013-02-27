@@ -391,7 +391,7 @@ del {
 }
 
 .hugeotron {
-  background: url("../../images/cards.jpg") repeat scroll center center transparent;
+  background: url("../../images/cards.png") repeat scroll center center transparent;
   background-size: 100%;
     box-shadow: 0 3px 7px rgba(0, 0, 0, 0.4) inset, 0 -3px 7px rgba(0, 0, 0, 0.4) inset;
     color: #FFFFFF;
