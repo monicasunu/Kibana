@@ -4,7 +4,7 @@ class AuthLDAP
   # Required function, accepts a KibanaConfig object
   def initialize(config)
     @ldap = Net::LDAP.new
-    @ldap_key = "L1m1t3d!"
+    @ldap_key = ""
     @ldap.host = (defined? config::Ldap_host) ? config::Ldap_host : ""
     @ldap.port = (defined? config::Ldap_port) ? config::Ldap_port : 636
     @ldap_user_base = (defined? config::Ldap_user_base) ? config::Ldap_user_base : ""
