@@ -21,9 +21,13 @@ gem.add_runtime_dependency 'daemons'
 gem.add_runtime_dependency 'rpam'
 gem.add_runtime_dependency 'net-ldap'
 gem.add_runtime_dependency 'mongoid'
+gem.add_runtime_dependency 'mongo' '~> 1.2'
 
 gem.add_development_dependency 'rake'
 gem.add_development_dependency 'rspec'
 gem.add_development_dependency 'rspec-mocks'
+gem.add_development_dependency 'bson_ext'
+gem.add_development_dependency 'moped'
+
 
 end
