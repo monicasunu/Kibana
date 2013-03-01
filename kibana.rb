@@ -584,6 +584,7 @@ post '/api/favorites' do
     hashcode = params[:hashcode]
     searchstring = params[:searchstring]
     user = session[:username]
+    opt = params[:addFavoriteOpt]
     
     # check if group or user
     if opt!= "1" and !@user_perms[:is_admin]
