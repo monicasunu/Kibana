@@ -253,20 +253,23 @@ end
 post '/auth/admin/save' do
   if params[:Groupname] != nil
     # prefix group name with only one @
-    params[:Username]= params[:Groupname].gsub(/^@*(.*)$/, '@\1') 
+    params[:Username]= params[:Groupname].gsub(/^@*(.*)$/, '@\1')
   else
     # strip first @ from username
     params[:Username] = params[:Username].gsub(/^@+/, '')
   end
   # strip illegal characters from username/groupname
   username = params[:Username].gsub(/[^@0-9A-Za-z_\\.-]/, '')
+  p "username:#{username}"
   if username.length < 3
     sleep(1)
+    p "<3"
     redirect '/auth/admin'
   end
   usertags = params[:usertags]
+  p "usertags:#{usertags}"
   if params[:delete] != nil
-    puts "Deleting #{username}"
+    p "Deleting #{username}"
     #@@storage_module.del_permissions(username)
     if username.start_with?("@")
       @@users_module.del_group(username)
@@ -275,26 +278,32 @@ post '/auth/admin/save' do
     end
   else
     if @@storage_module.lookup_permissions(username).nil?
-      puts "Creating #{username}"
+      p "Creating #{username}"
       # sets password to "" if password undefined
       #params[:pass1] = "" if params[:pass1].nil?
     else
-      puts "Updating #{username}"
+      p "Updating #{username}"
     end
-    is_admin = (defined?(params[:is_admin]) && params[:is_admin] == "true") ? true : false
-    usertags = members = params[:members]    
+    is_admin = (defined?(params[:is_admin]) && params[:is_admin] == "on") ? true : false
+    p "is_admin:#{is_admin}"
     #@@users_module.add_group(username, members, is_admin)
     # Update the auth group info
     if username.start_with?("@") and @@users_module.respond_to?('add_group')
-      #members = params[:members]
+      usertags = members = params[:members]
       @@users_module.add_group(username, members, is_admin)
     elsif !username.start_with?("@")
-      @@storage_module.set_permissions(username, [], is_admin)
+      usertags = groups = params[:groups]
+      newtags=Array.new()
       if usertags != nil && usertags != []
-	usertags.each do |gp|
-	  @@users_module.add_user_2group(username,gp)
-	end
+        usertags.each do |gp|
+          if !gp.start_with?("@")
+            gp="@"+gp
+          end
+          newtags.push(gp)
+          @@users_module.add_user_2group(username,gp)
+        end
       end
+      @@storage_module.set_permissions(username, newtags, is_admin)
     end
     #elsif params[:pass1] != nil
       #password = params[:pass1]
