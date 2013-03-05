@@ -1730,7 +1730,6 @@ function bind_clicks() {
   
     // validate and process form
     var name = $("input#addFavoriteInput").val();
-    var opt = $("select#addFavoriteOpt").val();
     if ((name.length <= 1) || (name.length >= 50)) {    
       $("#addFavoriteInput").addClass("error");
       return false;  
@@ -1740,7 +1739,7 @@ function bind_clicks() {
     var $form = $(this).parents('form');
     var sdata = $("#queryinput").val();
     var hdata = window.location.hash.replace(/^#/, '');
-    var data = $form.serialize() + '&searchstring=' + sdata +'&hashcode=' + hdata + '&opt=' + opt; 
+    var data = $form.serialize() + '&searchstring=' + sdata +'&hashcode=' + hdata; 
 	
     window.request = $.ajax({
       url: $form.attr('action'),
