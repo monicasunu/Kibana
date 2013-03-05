@@ -18,7 +18,7 @@ class ClientRequest
   attr_accessor :search,:from,:to,:offset,:fields,:analyze
 
   def initialize(hash)
-    @request = JSON.parse(Base64.decode64(URI.unescape(hash))
+    @request = JSON.parse(Base64.decode64(URI.unescape(hash)))
 
     @search = @request['search']
     if @search != "" and @search.include? "|"
