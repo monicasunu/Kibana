@@ -136,7 +136,9 @@ function getPage() {
           resultjson.kibana.default_fields : window.hashjson.fields
 
         // Create 'Columns' section
-        $('#fields').html("<h5><i class='icon-columns'></i> Columns</h5>" +
+        $('#fields').html("<div class='input-prepend'>" +
+          "<span class='add-on'><i class='icon-columns'></i></span>" +
+          "<input id='field_filter' type='text' class='span' placeholder='Columns' /></div>" +
           "<ul class='unselected nav nav-pills nav-stacked'></ul>");
 
         var all_fields = array_unique(get_all_fields(resultjson).concat(fields))
@@ -152,6 +154,7 @@ function getPage() {
         }
         $('#fields ul.unselected').append(fieldstr)
 
+        window.field_list = $('#fields > ul > li');
         //var fieldstr = '';
         //for (var index in window.hashjson.fields) {
         //  var field_name = window.hashjson.fields[index].toString();
@@ -848,6 +851,11 @@ function CreateLogTable(objArray, fields, theme, enableHeader) {
   var i = 1;
   for (var objid in array) {
     var object = array[objid];
+    for(var key in object.highlight) {
+      var hlfield = key;
+      var hlvalue = object.highlight[hlfield];
+    }
+
     var id = object._id;
     var alt = i % 2 == 0 ? '' : 'alt'
     var time = prettyDateString(
@@ -858,10 +866,25 @@ function CreateLogTable(objArray, fields, theme, enableHeader) {
     str += '<td class=firsttd>' + time + '</td>';
     for (var index in fields) {
       var field = fields[index];
-      var value = get_field_value(object,field)
+      if (typeof hlfield === "undefined")
+        var value = get_field_value(object,field);
+      else
+      {
+        if ( field.toString() == hlfield.toString() )
+          var value = hlvalue;
+        else
+          var value = get_field_value(object,field);
+      }
+
       var value = value === undefined ? "-" : value.toString();
+      var value = xmlEnt(wbr(value),10);
+      var value = value.replace(RegExp("@KIBANA_HIGHLIGHT_START@(.*?)@KIBANA_HIGHLIGHT_END@", "g"),
+            function (all, text, char) {
+              return "<span class='highlightedtext'>" + text + "</span>";
+            }
+        );
       str += '<td class="column" data-field="'+field+'">' +
-        xmlEnt(wbr(value, 10)) + '</td>';
+        value + '</td>';
     }
     str += '</tr><tr class="hidedetails"></tr>';
     i++;
@@ -1035,11 +1058,11 @@ function mFields(field) {
 }
 
 function feedLinks(obj) {
-  return "<a href=rss/" + Base64.encode(JSON.stringify(obj)) +">rss " +
+  return "<a href=rss/" + Base64.encode(JSON.stringify(obj, null, '')) +">rss " +
     "<i class='icon-rss'></i></a> "+
-    "<a href=export/" + Base64.encode(JSON.stringify(obj)) + ">export " +
+    "<a href=export/" + Base64.encode(JSON.stringify(obj, null, '')) + ">export " +
     "<i class='icon-hdd'></i></a> "+
-    "<a href=stream#" + Base64.encode(JSON.stringify(obj)) + ">stream " +
+    "<a href=stream#" + Base64.encode(JSON.stringify(obj, null, '')) + ">stream " +
     "<i class='icon-dashboard'></i></a>"
 }
 
@@ -1072,7 +1095,7 @@ $(function () {
         window.hashjson.analyze_field = field;
     }
 
-    if (window.location.hash == "#" + JSON.stringify(window.hashjson))
+    if (window.location.hash == "#" + JSON.stringify(window.hashjson, null, ''))
       pageload(window.location.hash);
     else
       setHash(window.hashjson);
@@ -1609,8 +1632,8 @@ function bind_clicks() {
     window.hashjson.timeframe = $(this).val();
     if (window.hashjson.timeframe == "custom") {
       //Initialize the date picker with a 15 minute window into the past
-      var d = new Date().getTime();
-      var startDate = new Date(d - (15 * 60 * 1000)).getTime();
+      var d = new Date();
+      var startDate = new Date(d - (15 * 60 * 1000));
       renderDateTimePicker(
         startDate, d);
     }
@@ -1684,6 +1707,27 @@ function bind_clicks() {
   // Column selection
   $("body").delegate(".mfield", "click", function () {
     mFields($(this).attr('data-field'));
+  });
+
+  // Column filter
+  $("body").delegate('#field_filter','keyup',function(e){
+      var search = $(this).val().toLowerCase();
+      if (!search || e.keyCode == 27) { //esc key
+          $(this).val('');
+          window.field_list.show();
+          return;
+      }
+
+      window.field_list.hide();
+      var shown = window.field_list.filter(function(index) {
+          return ($(this).attr('data-field').toLowerCase().indexOf(search) !== -1);
+      }).show();
+
+      if (shown.length == 1 && e.keyCode == 13) { // enter key
+          shown.children('i').click(); //toggle column
+          $(this).val('');
+          window.field_list.show();
+      }
   });
 
   $("body").delegate("span.related a.more", "click", function () {
