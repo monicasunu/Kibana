@@ -340,7 +340,11 @@ get '/api/search/:hash/?:segment?' do
   segment = params[:segment].nil? ? 0 : params[:segment].to_i
 
   req     = ClientRequest.new(params[:hash])
-  query   = SortedQuery.new(req.search,@user_perms,req.from,req.to,req.offset)
+  if KibanaConfig::Highlight_results
+    query   = HighlightedQuery.new(req.search,@user_perms,req.from,req.to,req.offset)
+  else
+    query   = SortedQuery.new(req.search,@user_perms,req.from,req.to,req.offset)
+  end
   indices = Kelastic.index_range(req.from,req.to)
   result  = KelasticMulti.new(query,indices)
 
@@ -349,6 +353,7 @@ get '/api/search/:hash/?:segment?' do
   result.response['kibana']['time'] = {
     "from" => req.from.iso8601, "to" => req.to.iso8601}
   result.response['kibana']['default_fields'] = KibanaConfig::Default_fields
+  result.response['kibana']['clickable_urls'] = KibanaConfig::Clickable_URLs
 
   JSON.generate(result.response)
 end
