@@ -618,10 +618,15 @@ post '/api/favorites' do
       # checks if favorite name already exists
       if !name.nil? and !searchstring.nil? and name != ""
         favorites = @@storage_module.get_favorites(opt)
+        fav_number = 0
         favorites.each do |fav|
+          fav_number += 1
           if fav[:name] == name
             return JSON.generate( { :success => false , :message => "Name already exists" } )
           end
+        end
+        if fav_number >= (KibanaConfig::Favorite_limte).to_i
+          return JSON.generate( { :success => false , :message => "Reach the maximum favorites can be saved" } )
         end
         # adds a new favorite
         result = @@storage_module.set_favorite(name,opt,searchstring,hashcode)
