@@ -591,7 +591,20 @@ modaltxtarea.error:focus {
   margin: .8em 0 .2em;
   line-height: 1.5;
 }
- 
+
+.ui-autocomplete {
+    max-height: 200px;
+    overflow-y: auto;
+    /* prevent horizontal scrollbar */
+    overflow-x: hidden;
+    /* add padding to account for vertical scrollbar */
+    padding-right: 20px;
+}
+
+* html .ui-autocomplete {
+    height: 200px;
+}
+
 #favList {
   width: 96% !important;
 }
