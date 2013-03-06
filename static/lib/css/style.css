@@ -618,7 +618,7 @@ modaltxtarea.error:focus {
 }
 
 .dropdown-menu {
-  max-height: 100px;
+  max-height: 200px;
   overflow: hidden;
   overflow-y: auto;
 }
