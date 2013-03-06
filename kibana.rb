@@ -81,6 +81,10 @@ end
 
 before do
   if @@auth_module
+    if (session[:lastactive] == nil || (Time.now - session[:lastactive]).to_i > (KibanaConfig::LoginTimeout).to_i)
+      session[:username] = nil
+      session[:lastactive] = nil
+    end
     unless session[:username]
       if request.path.start_with?("/api")
         # ajax api call, just return an error
@@ -167,6 +171,7 @@ post '/auth/login' do
   if @@auth_module.authenticate(username,password)
 
     session[:username] = username
+    session[:lastactive] = Time.now
     session[:login_message] = ""
     redirect '/'
   else
@@ -180,6 +185,7 @@ get '/auth/logout' do
     redirect '/'
   end
   session[:username] = nil
+  session[:lastactive] = nil
   session[:login_message] = "Successfully logged out"
   redirect '/auth/login'
 end
