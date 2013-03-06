@@ -616,3 +616,9 @@ modaltxtarea.error:focus {
 #favList a.deleteFavoriteButton {
   color: #D3D3D3;
 }
+
+.dropdown-menu {
+  max-height: 100px;
+  overflow: hidden;
+  overflow-y: auto;
+}
