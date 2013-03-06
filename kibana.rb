@@ -84,7 +84,7 @@ before do
     if (session[:lastactive] == nil || (Time.now - session[:lastactive]).to_i > (KibanaConfig::LoginTimeout).to_i)
       session[:username] = nil
       session[:lastactive] = nil
-      session[:login_message] = "Login Expired,please login again"
+      session[:login_message] = "Login expired,please login again"
     end
     unless session[:username]
       if request.path.start_with?("/api")
