@@ -97,7 +97,7 @@ before do
         halt redirect '/auth/login'
       end
     else
-      @user_perms = (@@storage_module.get_permissions(session[:username])) ? @@storage_module.get_permissions(session[:username]) : @@storage_module.set_permissions(session[:username],['*'],false)
+      @user_perms = (@@storage_module.get_permissions(session[:username])) ? @@storage_module.get_permissions(session[:username]) : @@storage_module.set_permissions(session[:username],['@default'],false)
       if !@user_perms
         # User is authenticated, but not authorized. Put them in
         # a holding state until an admin grants them authorization
