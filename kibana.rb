@@ -630,25 +630,24 @@ post '/api/favorites' do
 	opt = user
       end
       # checks if favorite name already exists
-        favorites = @@storage_module.get_favorites(opt)
-        dup = false
-        favorites.each do |fav|
-          if fav["name"] == name
-            dup = true
-          end
+      favorites = @@storage_module.get_favorites(opt)
+      dup = false
+      favorites.each do |fav|
+        if fav["name"] == name
+          dup = true
         end
-        if dup
-          return JSON.generate( { :success => false , :message => "Favorite Name Already Exists" } )
-        elsif favorites.length >= (KibanaConfig::Favorite_limte).to_i
-          return JSON.generate( { :success => false , :message => "Reach the maximum favorites can be saved" } )
-        else
-          # adds a new favorite
-          result = @@storage_module.set_favorite(name,opt,searchstring,hashcode)
-          return JSON.generate( { :success => result , :message => "" } )
-        end
-      else
-        halt 500, "Invalid action"
       end
+      if dup
+        return JSON.generate( { :success => false , :message => "Favorite Name Already Exists" } )
+      elsif favorites.length >= (KibanaConfig::Favorite_limte).to_i
+        return JSON.generate( { :success => false , :message => "Reach the maximum favorites can be saved" } )
+      else
+        # adds a new favorite
+        result = @@storage_module.set_favorite(name,opt,searchstring,hashcode)
+        return JSON.generate( { :success => result , :message => "" } )
+      end
+    else
+      halt 500, "Invalid action"
     end
   end
 end
