@@ -12,15 +12,15 @@ $(document).ready(function () {
   sbctl('hide',false);
 
   // Handle AJAX errors
-  $("div#logs").ajaxError(function (e, jqXHR, settings, exception) {
+  $("div#logs").ajaxError(function (e, xhr, settings, exception) {
     $('#meta').text("");
-    if(jqXHR.statusText != 'abort') {
+    if(xhr.statusText != 'abort') {
       showError("<strong>Oops!</strong> Something went terribly wrong.",
         "I'm not totally sure what happened, but maybe refreshing, or "+
         "hitting Reset will help. If that doesn't work, you can try "+
         "restarting your browser. If all else fails, it is possible your"+
         " configuation has something funky going on. <br><br>If it helps,"+
-        " I received a <strong>" + jqXHR.status + " " + jqXHR.statusText +
+        " I received a <strong>" + xhr.status + " " + xhr.statusText +
         "</strong> from: " + settings.url);
     }
   });
