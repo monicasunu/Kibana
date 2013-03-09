@@ -150,8 +150,17 @@ get '/' do
   erb :index, :locals => locals
 end
 
+
 get '/stream' do
   send_file File.join(settings.public_folder, 'stream.html')
+end
+
+get '/report' do
+  send_file File.join(settings.public_folder, 'report.html')
+end
+
+get '/heatMap' do
+  send_file File.join(settings.public_folder, 'heatMap.html')
 end
 
 get '/auth/login' do
