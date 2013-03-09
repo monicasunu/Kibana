@@ -621,27 +621,29 @@ post '/api/favorites' do
 	opt = user
       end
       # checks if favorite name already exists
-      if !name.nil? and !searchstring.nil? and name != ""
         favorites = @@storage_module.get_favorites(opt)
-        fav_number = 0
+        dup = false
         favorites.each do |fav|
-          fav_number += 1
-          if fav[:name] == name
-            return JSON.generate( { :success => false , :message => "Name already exists" } )
+          if fav["name"] == name
+            dup = true
           end
         end
-        if fav_number >= (KibanaConfig::Favorite_limte).to_i
+        if dup
+          return JSON.generate( { :success => false , :message => "Favorite Name Already Exists" } )
+        elsif favorites.length >= (KibanaConfig::Favorite_limte).to_i
           return JSON.generate( { :success => false , :message => "Reach the maximum favorites can be saved" } )
+        else
+          # adds a new favorite
+          result = @@storage_module.set_favorite(name,opt,searchstring,hashcode)
+          return JSON.generate( { :success => result , :message => "" } )
         end
-        # adds a new favorite
-        result = @@storage_module.set_favorite(name,opt,searchstring,hashcode)
-        return JSON.generate( { :success => result , :message => "" } )
       else
         halt 500, "Invalid action"
       end
     end
   end
 end
+
 
 #API to get json of favorites of specific user
 get '/api/favorites' do
@@ -693,37 +695,6 @@ delete '/api/favorites' do
       end
     else
       halt 500, "Invalid action"
-    end
-  end
-end
-
-#API to delete default favorite by name
-delete '/api/deffavorites' do
-  if @@auth_module
-    id = params["id"]
-    # check if the user owns the favorite
-    if !id.nil? and id != ""
-      r = @@storage_module.get_defFavorite(id)
-      if !r.nil? and @user_perms[:is_admin] == true
-        result = @@storage_module.del_favorite(id)
-        return JSON.generate( { :success => result, :message => "Delete failed"} )
-      else
-        return JSON.generate( { :success => false, :message => "Operation not permitted" } )
-      end
-    else
-      halt 500, "Invalid action"
-    end
-  end
-end
-
-#API to get json of default favorites
-get '/api/deffavorites' do
-  if @@auth_module
-    results = @@storage_module.get_defFavorites()
-    if results != nil
-        #p "json: #{results}"
-        JSON.generate(results)
-        #results.as_json
     end
   end
 end
