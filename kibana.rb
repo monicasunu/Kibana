@@ -223,7 +223,9 @@ get %r{/auth/admin/([\w]+)(/[@% \w]+)?} do
     locals[:show_back] = true
     locals[:mode] = mode
     # TODO: Dynamically populate alltags
-    locals[:alltags] = ['*', '_grokparsefailure']
+    ttags = @@users_module.tags()
+    ttags.push('*')
+    locals[:alltags] = ttags
     if mode == "edit"
       # the second match contains the '/' at the start,
       # so we take the substring starting at position 1
