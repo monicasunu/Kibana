@@ -56,6 +56,19 @@ class UsersLDAP
     return grlist.uniq.sort
   end
 
+  def tags()
+    grlist = []
+    orglist = @storage.get_all_users()
+    if orglist
+      orglist.each do |item|
+        if item.start_with?("@")
+          grlist.push(item)
+        end
+      end
+    end
+    return grlist.uniq.sort
+  end
+
   def users()
     usrlist = []
     orglist = @storage.get_all_users()
