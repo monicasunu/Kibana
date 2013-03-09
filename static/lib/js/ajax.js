@@ -12,15 +12,15 @@ $(document).ready(function () {
   sbctl('hide',false);
 
   // Handle AJAX errors
-  $("div#logs").ajaxError(function (e, xhr, settings, exception) {
+  $("div#logs").ajaxError(function (e, jqXHR, settings, exception) {
     $('#meta').text("");
-    if(xhr.statusText != 'abort') {
+    if(jqXHR.statusText != 'abort') {
       showError("<strong>Oops!</strong> Something went terribly wrong.",
         "I'm not totally sure what happened, but maybe refreshing, or "+
         "hitting Reset will help. If that doesn't work, you can try "+
         "restarting your browser. If all else fails, it is possible your"+
         " configuation has something funky going on. <br><br>If it helps,"+
-        " I received a <strong>" + xhr.status + " " + xhr.statusText +
+        " I received a <strong>" + jqXHR.status + " " + jqXHR.statusText +
         "</strong> from: " + settings.url);
     }
   });
@@ -699,7 +699,7 @@ function enable_popovers() {
     tiny_bar(chart,'#micrograph')
     popover_clickedaway = false
     popover_visible = true
-    e.preventDefault()
+    //e.preventDefault()
 
   });
 }
@@ -1769,7 +1769,7 @@ function bind_clicks() {
   // Adding a favorite search
   $("#addFavoriteButton").on("click", function(e){
     window.inprogress = true;
-    e.preventDefault();
+    //e.preventDefault();
     $("#addFavoriteInput").removeClass("error");
   
     // validate and process form
@@ -1790,24 +1790,34 @@ function bind_clicks() {
       type: $form.attr('method'),
       cache: false,
       data: data,
-      success: function (json) {
-        result = JSON.parse(json)
-        if (result.success) {
-          $form.each(function(){
-            this.reset();
-	  });
-          setTimeout(function() { populate_selectboxes()}, 1000);
-          window.inprogress = false;
-          $.fancybox.close();
+      dataType: 'json',
+      complete: function (jqXHR, textStatus) {
+        result = JSON.parse(jqXHR.responseText);
+        if(textStatus == 'success') {
+          if (result.success) {
+            $form.each(function(){
+              this.reset();
+            });
+            setTimeout(function() { populate_selectboxes()}, 1000);
+            window.inprogress = false;
+            $.fancybox.close();
+            window.location.reload();
+          }
+          else
+          {
+            $("#addFavoriteInput").addClass("error");
+            $("div#addError").html('<p><font color="red"><strong>' + result.message + "</strong></font></p>");
+          }
         }
-        else {        
+        else if (textStatus != 'abort') {
           $("#addFavoriteInput").addClass("error");
-        }
+          $("div#addError").html('<p><font color="red"><strong>' + jqXHR.status + "" + textStatus + " " + result.message + "</strong></font></p>");
+       }
       }
     });
-    window.location.reload();
     return false;
   });
+
 
   // Open a favorite search
   //$("#openFavoriteButton").on("click", function(){
@@ -1829,20 +1839,25 @@ function bind_clicks() {
       type: 'delete',
       data: data,
       cache: false,
-      success: function (json) {
-        result = JSON.parse(json);
-        if (result.success) {
-          $('input#queryinput').reset();
-          setTimeout(function() { populate_selectboxes()}, 1000);
-          window.inprogress = false;
+      complete: function (jqXHR, textStatus) {
+        result = JSON.parse(jqXHR.responseText);
+        if(textStatus == 'success') {
+          if (result.success) {
+            setTimeout(function() { populate_selectboxes()}, 1000);
+            window.inprogress = false;
+            $.fancybox.close();
+            window.location.reload();
+          }
+          else
+          {
+            //$dropRow.addClass("error");
+          }
         }
-        else {
-            $("#errorMessage").html(result.message);
-            $("#errorMessageDialog").dialog();
-        }
+        else if (textStatus != 'abort') {
+            //$dropRow.addClass("error");
+       }
       }
     });
-    window.location.reload();
     return false;
   });
 }
