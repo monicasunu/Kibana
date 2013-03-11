@@ -23,15 +23,6 @@ class Favorite
   field :hashcode, :type => String
 end
 
-# MongoID class for storing default favorites
-class DefFavorite
-  include Mongoid::Document
-  field :_id, :type => String, pre_processed: true, default: ->{(0...10).map{65.+(rand(26)).chr}.join}
-  field :name, :type => String
-  field :searchstring, :type => String
-  field :hashcode, :type => String
-end
-
 class StorageMongo
   # Required function, accepts a KibanaConfig object
   def initialize(config)
@@ -177,7 +168,6 @@ class StorageMongo
       end
       if !p.persisted?
         raise "Failed to save favorite data for #{name}"
-        return false
       end
       return true
     rescue => details
@@ -225,74 +215,6 @@ class StorageMongo
       if p
         return p
       end
-    rescue => details
-      p "#{details.backtrace.join("\n")}"
-      return nil
-    end
-  end
-
-  # Sets a default favorite
-  def set_defFavorite(name,searchstring,hashcode)
-    begin
-      p = DefFavorite.where(:name => name)[0]
-      if !p
-        p = DefFavorite.create!
-        #id = (0...10).map{65.+(rand(26)).chr}.join
-        #p._id = id
-        p[:name] = name
-        p[:searchstring] = searchstring
-	p[:hashcode] = hashcode
-        p.save!
-      else
-        p "Duplicate name"
-        return false
-      end
-      if !p.persisted?
-        raise "Failed to save favorite data for #{name}"
-        return false
-      end
-      return true
-    rescue => details
-      p "#{details.backtrace.join("\n")}"
-      # TODO: log message?
-      return false
-    end
-  end
-
-  # Deletes a default favorite
-  def del_defFavorite(id)
-    begin
-      p = DefFavorite.where(:_id => id)
-      if p
-        p.delete
-        return true
-      end
-    rescue => details
-      p "#{details.backtrace.join("\n")}"
-      return false
-    end
-  end
-
-  # Get a default favorite by id
-  def get_defFavorite(id)
-    begin
-      p = DefFavorite.where(:_id => id).as_json[0]
-      if p
-        return p
-      end
-    rescue => details
-      p "#{details.backtrace.join("\n")}"
-      return nil
-    end
-  end
-
-  def get_defFavorites()
-    begin
-        result = Array.new
-        DefFavorite.each do |defFav|
-                result.push(defFav.as_json)
-        end
-        return result
     rescue => details
       p "#{details.backtrace.join("\n")}"
       return nil
