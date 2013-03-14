@@ -157,4 +157,16 @@ module KibanaConfig
 
   # Use this interval as fallback if the client's request in not valid.
   Fallback_interval = 900
+  
+  #number of favorites each user or group can contain
+  Favorite_limte = 100
+
+  #Starting time of scheduled search in 24
+  Start_hour = 3
+
+  #Lasting hours for scheduled search
+  Lasting_hour = 12
+
+  #Interval for scheduled search in seconds
+  User_interval = 1800
 end
