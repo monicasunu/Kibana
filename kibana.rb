@@ -611,6 +611,27 @@ get '/export/:hash/?:count?' do
 
 end
 
+#API to get scheduled search query
+get '/api/report' do
+  if @@auth_module
+    today = Date.today - 1
+    tfromh = KibanaConfig::Start_hour
+    ttoh = tfromh + KibanaConfig::Lasting_hour
+    uinterval = KibanaConfig::User_interval
+    tfrom = DateTime.new(today.year,today.month,today.day,tfromh,0,0,'-7').iso8601
+    tto = DateTime.new(today.year,today.month,today.day,ttoh,0,0,'-7').iso8601
+    n = @@storage_module.get_all_sch_searches()
+    result = Array.new
+    n.each do |i|
+        result.push(i.merge("time" => {"from" => tfrom, "to" => tto, "user_interval" => uinterval}))
+    end
+    JSON.generate(result)
+  else
+    JSON.generate({"error" => "You are not authorized to get scheduled search"})
+  end
+end
+
+
 #API to add favorites by given json
 post '/api/favorites' do
   if @@auth_module
