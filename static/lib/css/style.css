@@ -113,7 +113,7 @@ i.shift_column {
   margin: 0px 20px 10px 0px; 
 }
 
-span#micrograph {
+div#micrograph {
   width: 370px;
   height: 10px;
 }
