@@ -671,7 +671,7 @@ function enable_popovers() {
       }
 
       str =  microAnalysisTable(window.resultjson,field,5) + 
-        "<span id=micrograph></span>"+
+        "<div id=micrograph></div>"+
         str +
         "<div class='btn-group'>" +
           "<button class='btn btn-small analyze_btn' rel='score' " +
