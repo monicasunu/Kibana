@@ -696,8 +696,7 @@ function enable_popovers() {
       chart.push([[data[point][1],0]])
       i = i + 1;
     }
-    //remove tiny_bar for Chrome Uncaught Error: Invalid dimensions for plot, width = 0, height = 0 
-    //tiny_bar(chart,'#micrograph')
+    tiny_bar(chart,'#micrograph')
     popover_clickedaway = false
     popover_visible = true
     //e.preventDefault()
