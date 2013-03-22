@@ -159,8 +159,43 @@ get '/report' do
   send_file File.join(settings.public_folder, 'report.html')
 end
 
-get '/heatMap' do
-  send_file File.join(settings.public_folder, 'heatMap.html')
+get '/heatMap/:hash' do
+  # Build and execute
+  req     = ClientRequest.new(params[:hash])
+  query   = SortedQuery.new(req.search,@user_perms,req.from,req.to,req.offset)
+  indices = Kelastic.index_range(req.from,req.to)
+  result  = KelasticMulti.new(query,indices)
+  sources = result.response['hits']['hits']
+  locals = {}
+  all = []
+  id_set = []
+  count = 0
+  sources.each do |source|
+    if source['_source']['@fields'].keys().include? 'geoip'
+      count += 1
+      lat = source['_source']['@fields']['geoip']['latitude']
+      lon = source['_source']['@fields']['geoip']['longitude']
+      x = lat,lon
+      if id_set.length == 0 || (!id_set.include? x)
+        id_set.push(x)
+        temp={}
+        temp[:city_name] = source['_source']['@fields']['geoip']['city_name']
+        temp[:latitude] = lat
+        temp[:longitude] = lon
+        temp[:weight] = 1
+        all.push(temp)
+      else
+        all.each_with_index do |val, index|
+          if val[:latitude] == lat && val[:longitude] == lon
+            val[:weight] += 1
+          end
+        end
+      end
+    end
+  end
+  locals[:info] = all
+  locals[:hits] = count
+  erb :heatmap, :locals => locals
 end
 
 get '/auth/login' do
