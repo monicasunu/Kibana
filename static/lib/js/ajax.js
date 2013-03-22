@@ -1060,7 +1060,7 @@ function mFields(field) {
 function feedLinks(obj) {
   return "<a href=report#" + Base64.encode(JSON.stringify(obj, null, '')) +">report " + 
     "<i class='icon-file'></i></a> " +
-    "<a href=heatMap#" + Base64.encode(JSON.stringify(obj, null, '')) + ">heatMap " + 
+    "<a href=heatMap/" + Base64.encode(JSON.stringify(obj, null, '')) + ">heatMap " + 
     "<i class='icon-globe'></i></a> " +
     "<a href=rss/" + Base64.encode(JSON.stringify(obj, null, '')) +">rss " +
     "<i class='icon-rss'></i></a> "+
