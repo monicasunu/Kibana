@@ -1,0 +1,57 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
+<html>
+<head><title>Central Logging HeatMap</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7" />
+  <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no" /> 
+<script type="text/javascript"
+      src="http://maps.googleapis.com/maps/api/js?libraries=visualization&v=3&client=gme-shutterflyinc&sensor=false"></script>
+<!--<script type="text/javascript" src="../js/timezone.js"></script>-->
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.js"></script>
+<script type="text/javascript" src="http://code.jquery.com/jquery-migrate-1.0.0.js"></script>
+<!--<script type="text/javascript" src="../lib/js/lib/safebase64.js"></script>
+<script type="text/javascript" src="../lib/js/lib/json2.js"></script>
+<script type="text/javascript" src="../lib/js/lib/date.js"></script>
+
+<script type="text/javascript" src="../lib/js/shared.js"></script>-->
+<script type="text/javascript" src="../lib/js/lib/markerclusterer.js"></script>
+<script type="text/javascript" src="../lib/js/lib/infobubble.js"></script>
+<script type="text/javascript" src="../lib/js/showHM.js"></script>
+<!--<script type="text/javascript" src="lib/js/heatmap.js"></script>-->
+<script type="text/javascript">
+        var ptns=[];
+        var markers=[];
+        var wdns=[];    
+</script>
+<%for i in locals[:info]%>
+  <script type="text/javascript">form("<%=i[:latitude]%>","<%=i[:longitude]%>","<%=i[:city_name]%>","<%=i[:weight]%>",ptns,markers,wdns)</script>
+<%end%>
+<link rel="stylesheet" href="../lib/bootstrap/css/bootstrap.min.css">
+<link rel="stylesheet" href="../lib/css/font-awesome.css">
+<link rel="stylesheet" href="../lib/css/style.css">
+<link rel="stylesheet" href="../lib/css/heatmap.css">
+</head>
+<body onload="hmp(ptns,markers,wdns)">
+  <div class="navbar navbar-fixed-top navbar-inverse">
+    <div class="navbar-inner">
+    <div id="heatmapcontrol" class="container-fluid topbar">
+        <span id="pause" class="pull-left">
+          <a href="/"><img src='../images/logo.png' style='padding:4px 0px 0px 5px'></a>
+        </span>
+        <span id="counter" class="pull-right"><h3><%=locals[:hits]%> Valid Geo-Hits</h3></span>
+      </div>
+    </div>
+  </div>
+
+  <!--<div id="heatMap" class="container-fluid">
+    <div class="row-fluid">
+    <span id="query"><h4></h4></span>-->
+    <div id="map_canvas">
+    </div>
+    <!--</div>
+  </div>-->
+
+</body>
+</html>
