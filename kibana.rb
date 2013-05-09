@@ -116,7 +116,8 @@ before do
 
         # check any groups this user belongs to for additional
         # permissions defined in the storage module
-        @@users_module.membership(session[:username]).each do |group|
+        if @@users_module.membership(session[:username])
+         @@users_module.membership(session[:username]).each do |group|
           g_perms = @@storage_module.get_permissions("@"+group)
           if g_perms
             if defined?(g_perms[:tags]) and g_perms[:tags]
@@ -126,6 +127,7 @@ before do
               @user_perms[:is_admin] ||= g_perms[:is_admin]
             end
           end
+         end
         end
 
         if request.path.start_with?("/auth/admin")
